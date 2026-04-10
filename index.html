@@ -1,13 +1,50 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vite-project</title>
+    <title>RSS Reader</title>
+
+    <!-- Подключаем CSS -->
+    <link rel="stylesheet" href="/styles.css" />
   </head>
+
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">RSS агрегатор</h1>
+          <p class="hero-text">
+            Начните читать RSS сегодня! Это легко, это красиво.
+          </p>
+
+          <form id="rss-form">
+            <div class="rss-form-row">
+              <div class="rss-input-group">
+                <input
+                  id="url-input"
+                  type="text"
+                  name="url"
+                  class="rss-input"
+                  placeholder="Ссылка RSS"
+                  required
+                />
+                <div class="rss-example">
+                  Пример: https://lorem-rss.hexlet.app/feed
+                </div>
+                <div class="feedback"></div>
+              </div>
+
+              <button type="submit" class="rss-button">
+                Добавить
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
