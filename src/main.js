@@ -14,6 +14,11 @@ const state = {
     feedback: ''
 }
 
+const feedsCopy = (linkRSS) => {
+    const arrFeeds = state.feeds;
+    return arrFeeds.filter((feed) => feed === linkRSS.value.trim());
+}
+
 
 const render = () => {
     input.classList.remove('error', 'success');
@@ -91,6 +96,13 @@ form.addEventListener('submit', (e) => {
         state.button = 'noAktive';
         render();
         return;
+    } else if (!feedsCopy(linkRSS)) {
+        state.errors = [];
+        state.errors.push('Такой URL уже есть');
+        state.state = 'error';
+        state.button = 'noAktive';
+        render();
+        return;
     }
 
     try {
@@ -111,9 +123,6 @@ form.addEventListener('submit', (e) => {
       state.feeds.push(linkRSS);
       render();
   }
-
-    // дописать в рендере отображение кнопки 
-    // дописать сам рендер и базовый запуск приложения 
 
 
 render();
