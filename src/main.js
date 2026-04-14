@@ -2,6 +2,7 @@ import './style.css';
 import { proxy } from 'valtio/vanilla';
 import { subscribe } from 'valtio/vanilla';
 import * as yup from 'yup';
+import i18next from 'i18next'
 
 
 const form = document.querySelector('#rss-form');
@@ -12,11 +13,40 @@ const feedback = document.querySelector('.feedback');
 const state = proxy({
     feeds: [],
     linkRSS: 'samLink',
-    state: 'processing',  // success, error
-    button: 'aktive',     // 'noAktive'
+    state: 'processing',   // success, error
+    button: 'aktive',      // 'noAktive'
     errors: [],
     feedback: ''
-});
+  });
+
+const texts = {
+        lng: 'ru',
+        resources: {
+          ru: {
+            translation: {
+              success: 'RSS успешно загружен', //state.text.resources.ru.translation.success
+              errors: {
+                required: 'Не должно быть пустым',
+                invalidUrl: 'Ссылка должна быть валидным URL',
+                duplicate: 'RSS уже существует',
+              },
+            },
+          },
+        },
+      };
+
+      yup.setLocale({
+        mixed: {
+          required: 'errors.required',
+          notOneOf: 'errors.duplicate',
+        },
+        string: {
+          url: 'errors.invalidUrl',
+        },
+      })
+
+await i18next.init(texts);
+
 
 const render = () => {
     input.classList.remove('error', 'success');
@@ -26,7 +56,7 @@ const render = () => {
     if (state.state === 'error') {
         input.classList.add('error');
         feedback.classList.add('error');
-        feedback.textContent = state.errors.join('. ');
+        feedback.textContent = state.errors.map((error) => i18next.t(error)).join('. ');
         input.focus();
         return;
 
@@ -38,33 +68,25 @@ const render = () => {
     if (state.state === 'success') {
         feedback.classList.add('success');
         state.button = 'aktive';
-        feedback.textContent = 'RSS успешно загружен';
+        feedback.textContent = i18next.t('success');
         input.value = '';
-        input.focus();
-        
-    }
-    
-    }
-
-if (!form) {
-    console.error('Форма не найдена');
-  }
+        input.focus(); 
+    } 
+}
 
 form.addEventListener('submit', (e) => {
-
     e.preventDefault();
     const linkRSS = input.value.trim();
     chekLink(linkRSS);
-
   })
 
   const chekLink = (linkRSS) => {
     state.errors = [];
     yup
         .string() //→ тип
-        .required('Не должно быть пустым') //→ не пусто
-        .url('Ссылка должна быть валидным URL') //→ валидный URL
-        .notOneOf(state.feeds, 'Такой URL уже есть') //→ не дубликат
+        .required() //→ не пусто
+        .url() //→ валидный URL
+        .notOneOf(state.feeds) //→ не дубликат
         .validate(linkRSS) //→ запускает проверку
         .then(() => {
             state.state = 'success';
@@ -85,6 +107,4 @@ form.addEventListener('submit', (e) => {
     }
 
     subscribe(state, render);
-
-//render();
 
