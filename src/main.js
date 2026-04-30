@@ -1,218 +1,219 @@
 import './style.css';
-import { proxy } from 'valtio/vanilla';
-import { subscribe } from 'valtio/vanilla';
+import { proxy, subscribe } from 'valtio/vanilla';
 import * as yup from 'yup';
 import i18next from 'i18next';
-
+import 'bootstrap';
 
 const form = document.querySelector('#rss-form');
 const input = document.querySelector('#url-input');
-const button = document.querySelector('.rss-button');
 const feedback = document.querySelector('.feedback');
+const postsList = document.querySelector('.posts-list');
+const feedsList = document.querySelector('.feeds-list');
 
 const state = proxy({
-    linkRSS: 'samLink',
-    state: 'processing',   // success, error
-    button: 'aktive',      // 'noAktive'
-    errors: [],
-    feedback: '',
-    url: "",
-    feeds: [],
-    incomingWeb: []
-  });
+  linkRSS: 'samLink',
+  state: 'processing',   // success, error
+  button: 'aktive',      // 'noAktive'
+  errors: [],
+  feeds: [], 
+  incomingWeb: [],
+  uiState: {
+    visitedPostIds: new Set(),
+    modalPostId: null,
+  }
+});
 
 const texts = {
-        lng: 'ru',
-        resources: {
-          ru: {
-            translation: {
-              success: 'RSS успешно загружен', //state.text.resources.ru.translation.success
-              errors: {
-                required: 'Не должно быть пустым',
-                invalidUrl: 'Ссылка должна быть валидным URL',
-                duplicate: 'RSS уже существует',
-              },
-            },
-          },
+  lng: 'ru',
+  resources: {
+    ru: {
+      translation: {
+        success: 'RSS успешно загружен',
+        errors: {
+          required: 'Не должно быть пустым',
+          invalidUrl: 'Ссылка должна быть валидным URL',
+          duplicate: 'RSS уже существует',
         },
-      };
+      },
+    },
+  },
+};
 
-      yup.setLocale({
-        mixed: {
-          required: 'errors.required',
-          notOneOf: 'errors.duplicate',
-        },
-        string: {
-          url: 'errors.invalidUrl',
-        },
-      })
+yup.setLocale({
+  mixed: {
+    required: 'errors.required',
+    notOneOf: 'errors.duplicate',
+  },
+  string: {
+    url: 'errors.invalidUrl',
+  },
+});
 
 await i18next.init(texts);
 
-
 const render = () => {
-    input.classList.remove('error', 'success');
-    feedback.classList.remove('error', 'success');
-    feedback.textContent = '';
+  input.classList.remove('error', 'success');
+  feedback.classList.remove('error', 'success');
+  feedback.textContent = '';
 
-    if (state.state === 'error') {
-        input.classList.add('error');
-        feedback.classList.add('error');
-        feedback.textContent = state.errors.map((error) => i18next.t(error)).join('. ');
-        input.focus();
-        return;
+  if (state.state === 'error') {
+    input.classList.add('error');
+    feedback.classList.add('error');
+    feedback.textContent = state.errors.map((error) => i18next.t(error)).join('. ');
+    input.focus();
+  } else if (state.state === 'success') {
+    feedback.classList.add('success');
+    feedback.textContent = i18next.t('success');
+    input.value = '';
+    input.focus();
+  }
+};
 
-      } else {
-        input.classList.remove('error');
-        feedback.classList.remove('error');
-      }
-    
-    if (state.state === 'success') {
-        feedback.classList.add('success');
-        state.button = 'aktive';
-        feedback.textContent = i18next.t('success');
-        input.value = '';
-        input.focus(); 
-    } 
-}
+const render2 = () => {
+  postsList.innerHTML = '';
+  state.incomingWeb.forEach((item) => {
+    const postItem = document.createElement('div');
+    postItem.classList.add('post-item', 'd-flex', 'justify-content-between', 'align-items-start', 'mb-2');
 
-form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const linkRSS = input.value.trim();
-    chekLink(linkRSS);
-  })
+    const el = document.createElement('a');
+    el.href = item.post;
+    el.textContent = item.title;
+    el.target = "_blank";
+    el.rel = "noopener noreferrer";
 
-  const chekLink = (linkRSS) => {
-    state.errors = [];
-    yup
-        .string() //→ тип
-        .required() //→ не пусто
-        .url() //→ валидный URL
-        .notOneOf(state.feeds.map((feed) => feed.link)) //→ не дубликат
-        .validate(linkRSS) //→ запускает проверку
-        .then(() => {
-            state.state = 'success';
-            input.value = '';
-            input.focus();
-            render();
+    const isVisited = state.uiState.visitedPostIds.has(item.id);
+    el.classList.add(isVisited ? 'fw-normal' : 'fw-bold');
+    el.classList.add('post-link');
 
-            parsIncomingWeb(linkRSS);
-        }) //→ успех
-        .catch((err) => {
-            state.errors.push(err.message);
-            state.state = 'error';
-            state.button = 'noAktive';
-            input.classList.add('error');
-            render();
-        return;
-        }) //→ ошибка
-
-    }
-
-    subscribe(state, render);
-
-const parsIncomingWeb = (linkRSS) => {
-
-  const proxyUrl = 'https://allorigins.hexlet.app/get?url=';
-    
-  fetch(`${proxyUrl}${encodeURIComponent(linkRSS)}`)
-  .then(response => {
-    if (response.ok) return response.json()
-    throw new Error('Network response was not ok.')
-  })
-  .then(data => {
-    const parser = new DOMParser();
-    const document = parser.parseFromString(data.contents, "text/xml");
-    const parserError = document.querySelector('parsererror');
-
-    // ФИД (один раз)
-    const titleFeed = document.querySelector('channel > title')?.textContent ?? '';
-    const descriptionFeed = document.querySelector('channel > description')?.textContent ?? '';
-    const link = document.querySelector('channel > link')?.textContent ?? '';
-    
-
-    if (parserError) {
-        throw new Error('Ошибка парсинга RSS');
-      }
-
-
-    state.feeds.push({
-        id: String(state.feeds.length + 1),
-        title: titleFeed,
-        description: descriptionFeed,
-        link: link,
-    });
-
-
-      const items = document.querySelectorAll('item');
-
-      items.forEach((item, index) => {
-        const title = item.querySelector('title')?.textContent ?? '';
-        const description = item.querySelector('description')?.textContent ?? '';
-        const post = item.querySelector('link')?.textContent ?? '';
-
-        state.incomingWeb.push({id: String(state.incomingWeb.length + 1), description: description, title: title, post: post})
-
-      });
-
-    render2();
-
-    })
-    .catch((error) => {
-      state.errors = [error.message];
-      state.state = 'error';
-    });
-    
-}
-
-const postsList = document.querySelector('.posts-list');
-
-  const render2 = () => {
-
-    postsList.innerHTML = '';
-
-    state.incomingWeb.forEach((item) => {
-      // контейнер поста
-      const postItem = document.createElement('div');
-      postItem.classList.add('post-item');
-
-      const el = document.createElement('a');
-      el.classList.add("post-link");
-      el.href = item.post;
-      el.textContent = item.title;
-
-      // кнопка
     const button = document.createElement('button');
-    button.classList.add('post-button');
-    button.type = 'button';
     button.textContent = 'Просмотр';
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.setAttribute('data-id', item.id);
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
 
-    // собираем
+    button.addEventListener('click', () => {
+      state.uiState.modalPostId = item.id;
+      state.uiState.visitedPostIds.add(item.id);
+    });
+
     postItem.appendChild(el);
     postItem.appendChild(button);
     postsList.appendChild(postItem);
   });
 
-  const feedsList = document.querySelector('.feeds-list');
   feedsList.innerHTML = '';
-
   state.feeds.forEach((item) => {
-    // контейнер поста
     const feedItem = document.createElement('div');
-    feedItem.classList.add('feeds-list');
-    feedItem.classList.add('feed-item');
-
-    const el = document.createElement('h3');
-      el.classList.add("feed-title");
-      el.textContent = item.title;
-    const el2 = document.createElement('p');
-    el2.classList.add("feed-description");
-    el2.textContent = item.description;
-
-    feedItem.appendChild(el);
-    feedItem.appendChild(el2);
+    feedItem.classList.add('feed-item', 'mb-3');
+    feedItem.innerHTML = `<h3>${item.title}</h3><p>${item.description}</p>`;
     feedsList.appendChild(feedItem);
-
-  })
-
+  });
 };
+
+const renderModal = () => {
+  const { modalPostId } = state.uiState;
+  if (!modalPostId) return;
+
+  const post = state.incomingWeb.find((p) => p.id === modalPostId);
+  if (!post) return;
+
+  document.querySelector('.modal-title').textContent = post.title;
+  document.querySelector('.modal-body').textContent = post.description;
+  document.querySelector('.full-article').href = post.post;
+};
+
+// Подписки
+subscribe(state, render);
+subscribe(state, render2);
+subscribe(state.uiState, renderModal);
+
+const parsIncomingWeb = (linkRSS) => {
+  const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
+  fetch(`${proxyUrl}${encodeURIComponent(linkRSS)}`)
+    .then(response => {
+      if (response.ok) return response.json();
+      throw new Error('Network response was not ok.');
+    })
+    .then(data => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data.contents, "text/xml");
+      if (doc.querySelector('parsererror')) throw new Error('Ошибка парсинга RSS');
+
+      const titleFeed = doc.querySelector('channel > title')?.textContent ?? '';
+      const descriptionFeed = doc.querySelector('channel > description')?.textContent ?? '';
+
+      state.feeds.push({
+        id: String(state.feeds.length + 1),
+        title: titleFeed,
+        description: descriptionFeed,
+        link: linkRSS,
+      });
+
+      const items = doc.querySelectorAll('item');
+      const posts = Array.from(items).map((item) => ({
+        id: Math.random().toString(36).substring(2),
+        title: item.querySelector('title')?.textContent ?? '',
+        description: item.querySelector('description')?.textContent ?? '',
+        post: item.querySelector('link')?.textContent ?? '',
+      }));
+
+      state.incomingWeb.unshift(...posts);
+    })
+    .catch((error) => {
+      state.errors = [error.message];
+      state.state = 'error';
+    });
+};
+
+const chekLink = (linkRSS) => {
+  state.errors = [];
+  yup.string().required().url()
+    .notOneOf(state.feeds.map((feed) => feed.link))
+    .validate(linkRSS)
+    .then(() => {
+      state.state = 'success';
+      parsIncomingWeb(linkRSS);
+    })
+    .catch((err) => {
+      state.errors = [err.message];
+      state.state = 'error';
+    });
+};
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  chekLink(input.value.trim());
+});
+
+const updateFeeds = async () => {
+  const promises = state.feeds.map(async (feed) => {
+    try {
+      const url = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(feed.link)}&v=${Date.now()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+      const items = Array.from(xml.querySelectorAll('item'));
+
+      const fetchedPosts = items.map((item) => ({
+        title: item.querySelector('title')?.textContent ?? '',
+        post: item.querySelector('link')?.textContent ?? '',
+        description: item.querySelector('description')?.textContent ?? '',
+        feedId: feed.id,
+      }));
+
+      const newPosts = fetchedPosts.filter((fp) => !state.incomingWeb.some((ep) => ep.post === fp.post));
+
+      if (newPosts.length > 0) {
+        state.incomingWeb.unshift(...newPosts.map(p => ({ ...p, id: Math.random().toString(36).substring(2) })));
+      }
+    } catch (e) {
+      console.error('Ошибка при обновлении фида:', e);
+    }
+  });
+
+  await Promise.all(promises);
+  setTimeout(updateFeeds, 5000);
+};
+
+updateFeeds();
