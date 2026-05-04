@@ -217,7 +217,8 @@ const updateFeeds = async () => {
       if (newPosts.length > 0) {
         state.incomingWeb.unshift(...newPosts.map(p => ({ ...p, id: Math.random().toString(36).substring(2) })))
       }
-    } catch (e) {
+    }
+catch (e) {
       console.error('Ошибка при обновлении фида:', e)
     }
   })
