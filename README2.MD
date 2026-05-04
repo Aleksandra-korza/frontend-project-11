@@ -5,3 +5,7 @@ npm run dev
 git add .
 git commit -m "..."
 git push
+
+## запускаем линтер 
+npx eslint --no-config-lookup --config eslint.config.js . --fix
+npx eslint --no-config-lookup --config eslint.config.js .
