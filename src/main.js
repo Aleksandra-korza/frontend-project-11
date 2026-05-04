@@ -145,18 +145,15 @@ const parsIncomingWeb = (linkRSS) => {
       const doc = parser.parseFromString(data.contents, 'text/xml')
       if (doc.querySelector('parsererror')) {
         throw new Error('errors.noRss')
-      };
-
+      }
       const titleFeed = doc.querySelector('channel > title')?.textContent ?? ''
       const descriptionFeed = doc.querySelector('channel > description')?.textContent ?? ''
-
       state.feeds.push({
         id: String(state.feeds.length + 1),
         title: titleFeed,
         description: descriptionFeed,
         link: linkRSS,
       })
-
       const items = doc.querySelectorAll('item')
       const posts = Array.from(items).map(item => ({
         id: Math.random().toString(36).substring(2),
