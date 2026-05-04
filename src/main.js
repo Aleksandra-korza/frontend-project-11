@@ -84,11 +84,11 @@ const render2 = () => {
     el.rel = 'noopener noreferrer'
 
     const isVisited = state.uiState.visitedPostIds.has(item.id)
-      if (isVisited) {
-        el.classList.add('fw-normal', 'link-secondary', 'post-link')
-      } else {
-        el.classList.add('fw-bold', 'post-link')
-      }
+          if (isVisited) {
+            el.classList.add('fw-normal', 'link-secondary', 'post-link')
+          } else {
+            el.classList.add('fw-bold', 'post-link')
+          }
 
     const button = document.createElement('button')
     button.textContent = 'Просмотр'
