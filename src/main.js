@@ -33,6 +33,8 @@ const texts = {
           required: 'Не должно быть пустым',
           invalidUrl: 'Ссылка должна быть валидным URL',
           duplicate: 'RSS уже существует',
+          noRss: 'Ресурс не содержит валидный RSS',
+          network: 'Ошибка сети',
         },
       },
     },
@@ -72,7 +74,7 @@ const render = () => {
 const render2 = () => {
   postsList.innerHTML = '';
   state.incomingWeb.forEach((item) => {
-    const postItem = document.createElement('div');
+    const postItem = document.createElement('li');
     postItem.classList.add('post-item', 'd-flex', 'justify-content-between', 'align-items-start', 'mb-2');
 
     const el = document.createElement('a');
@@ -104,7 +106,7 @@ const render2 = () => {
 
   feedsList.innerHTML = '';
   state.feeds.forEach((item) => {
-    const feedItem = document.createElement('div');
+    const feedItem = document.createElement('li');
     feedItem.classList.add('feed-item', 'mb-3');
     feedItem.innerHTML = `<h3>${item.title}</h3><p>${item.description}</p>`;
     feedsList.appendChild(feedItem);
@@ -138,7 +140,9 @@ const parsIncomingWeb = (linkRSS) => {
     .then(data => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(data.contents, "text/xml");
-      if (doc.querySelector('parsererror')) throw new Error('Ошибка парсинга RSS');
+      if (doc.querySelector('parsererror')) {
+        throw new Error('errors.noRss');
+      };
 
       const titleFeed = doc.querySelector('channel > title')?.textContent ?? '';
       const descriptionFeed = doc.querySelector('channel > description')?.textContent ?? '';
@@ -161,7 +165,10 @@ const parsIncomingWeb = (linkRSS) => {
       state.incomingWeb.unshift(...posts);
     })
     .catch((error) => {
-      state.errors = [error.message];
+      state.errors = error.message.startsWith('errors.')
+        ? [error.message]
+        : ['errors.network'];
+    
       state.state = 'error';
     });
 };
