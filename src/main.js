@@ -89,7 +89,6 @@ const render2 = () => {
     } else {
       el.classList.add('fw-bold', 'post-link')
     }
-
     const button = document.createElement('button')
     button.textContent = 'Просмотр'
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm')
