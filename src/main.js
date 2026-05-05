@@ -63,7 +63,8 @@ const render = () => {
     feedback.classList.add('error')
     feedback.textContent = state.errors.map(error => i18next.t(error)).join('. ')
     input.focus()
-  } else if (state.state === 'success') {
+  }
+  if (state.state === 'success') {
     feedback.classList.add('success')
     feedback.textContent = i18next.t('success')
     input.value = ''
