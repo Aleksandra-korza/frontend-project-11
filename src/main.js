@@ -86,7 +86,8 @@ const render2 = () => {
     const isVisited = state.uiState.visitedPostIds.has(item.id)
     if (isVisited) {
       el.classList.add('fw-normal', 'link-secondary', 'post-link')
-    } else {
+    }
+    else {
       el.classList.add('fw-bold', 'post-link')
     }
     const button = document.createElement('button')
