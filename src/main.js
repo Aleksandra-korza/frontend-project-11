@@ -77,7 +77,6 @@ const render2 = () => {
   state.incomingWeb.forEach((item) => {
     const postItem = document.createElement('li')
     postItem.classList.add('post-item', 'd-flex', 'justify-content-between', 'align-items-start', 'mb-2')
-
     const el = document.createElement('a')
     el.href = item.post
     el.textContent = item.title
@@ -85,11 +84,11 @@ const render2 = () => {
     el.rel = 'noopener noreferrer'
 
     const isVisited = state.uiState.visitedPostIds.has(item.id)
-          if (isVisited) {
-            el.classList.add('fw-normal', 'link-secondary', 'post-link')
-          } else {
-            el.classList.add('fw-bold', 'post-link')
-          }
+    if (isVisited) {
+      el.classList.add('fw-normal', 'link-secondary', 'post-link')
+    } else {
+      el.classList.add('fw-bold', 'post-link')
+    }
 
     const button = document.createElement('button')
     button.textContent = 'Просмотр'
@@ -216,7 +215,7 @@ const updateFeeds = async () => {
         state.incomingWeb.unshift(...newPosts.map(p => ({ ...p, id: Math.random().toString(36).substring(2) })))
       }
     }
-catch (e) {
+    catch (e) {
       console.error('Ошибка при обновлении фида:', e)
     }
   })
