@@ -12,8 +12,8 @@ const feedsList = document.querySelector('.feeds-list')
 
 const state = proxy({
   linkRSS: 'samLink',
-  state: 'processing',   // success, error
-  button: 'aktive',      // 'noAktive'
+  state: 'processing',
+  button: 'aktive',
   errors: [],
   feeds: [],
   incomingWeb: [],
