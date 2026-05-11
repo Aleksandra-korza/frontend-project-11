@@ -3,7 +3,7 @@ npm run dev
 
 ## добавляем и пушим обновления на GitHub
 git add .
-git commit -m "..."
+git commit -m "MVC done"
 git push
 
 ## запускаем линтер 
