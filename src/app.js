@@ -1,24 +1,19 @@
-import './style.css'
-import 'bootstrap'
 import { subscribe } from 'valtio/vanilla'
-
 import state from './model.js'
-import initI18n from './i18n.js'
-import { initView } from './view.js'
-import { initController } from './controller.js'
+import { form, input } from './view.js'
+import { render, render2, renderModal } from './view.js'
+import './i18n.js'
+import './validation.js'
+import { chekLink } from './controller.js'
 import { updateFeeds } from './updater.js'
 
-const app = async () => {
-  const i18next = await initI18n()
+subscribe(state, render)
+subscribe(state, render2)
+subscribe(state.uiState, renderModal)
 
-  const view = initView(state, i18next)
+form.addEventListener('submit', (e) => {
+  e.preventDefault()
+  chekLink(input.value.trim())
+})
 
-  subscribe(state, view.renderForm)
-  subscribe(state, view.renderContent)
-  subscribe(state.uiState, view.renderModal)
-
-  initController(state)
-  updateFeeds(state)
-}
-
-app()
+updateFeeds()

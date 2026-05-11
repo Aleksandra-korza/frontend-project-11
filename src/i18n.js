@@ -18,7 +18,6 @@ const texts = {
   },
 }
 
-export default async () => {
-  await i18next.init(texts)
-  return i18next
-}
+await i18next.init(texts)
+
+export default i18next

@@ -1,7 +1,9 @@
 import { proxy } from 'valtio/vanilla'
 
 const state = proxy({
-  state: 'filling',
+  linkRSS: 'samLink',
+  state: 'processing',
+  button: 'aktive',
   errors: [],
   feeds: [],
   incomingWeb: [],

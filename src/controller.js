@@ -1,41 +1,20 @@
-import { validateUrl } from './validation.js'
-import { fetchRSS } from './api.js'
-import { parseRSS } from './rssParser.js'
+import state from './model.js'
+import yup from './validation.js'
+import { parsIncomingWeb } from './rssParser.js'
 
-export const initController = (state) => {
-  const form = document.querySelector('#rss-form')
-  const input = document.querySelector('#url-input')
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    const url = input.value.trim()
-    state.errors = []
-
-    try {
-      await validateUrl(url, state.feeds)
-
-      const xml = await fetchRSS(url)
-      const { feed, posts } = parseRSS(xml)
-
-      state.feeds.push({
-        id: String(state.feeds.length + 1),
-        ...feed,
-        link: url,
-      })
-
-      state.incomingWeb.unshift(...posts)
-
+const chekLink = (linkRSS) => {
+  state.errors = []
+  yup.string().required().url()
+    .notOneOf(state.feeds.map(feed => feed.link))
+    .validate(linkRSS)
+    .then(() => {
       state.state = 'success'
-    }
-    catch (err) {
-      state.errors = err.message.startsWith('errors.')
-        ? [err.message]
-        : ['errors.network']
-
+      parsIncomingWeb(linkRSS)
+    })
+    .catch((err) => {
+      state.errors = [err.message]
       state.state = 'error'
-    }
-  }
-
-  form.addEventListener('submit', handleSubmit)
+    })
 }
+
+export { chekLink }

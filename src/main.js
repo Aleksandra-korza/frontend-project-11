@@ -1,6 +1,3 @@
 import './style.css'
 import 'bootstrap'
-
-import initApp from './app.js'
-
-initApp()
+import './app.js'

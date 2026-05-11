@@ -1,22 +1,26 @@
-import { fetchRSS } from './api.js'
-import { parseRSS } from './rssParser.js'
+import state from './model.js'
 
-export const updateFeeds = async (state) => {
+const updateFeeds = async () => {
   const promises = state.feeds.map(async (feed) => {
     try {
-      const xml = await fetchRSS(`${feed.link}&v=${Date.now()}`)
-      const { posts } = parseRSS(xml)
+      const url = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(feed.link)}&v=${Date.now()}`
+      const response = await fetch(url)
+      const data = await response.json()
+      const xml = new DOMParser().parseFromString(data.contents, 'text/xml')
+      const items = Array.from(xml.querySelectorAll('item'))
 
-      const postsWithFeedId = posts.map(post => ({
-        ...post,
+      const fetchedPosts = items.map(item => ({
+        title: item.querySelector('title')?.textContent ?? '',
+        post: item.querySelector('link')?.textContent ?? '',
+        description: item.querySelector('description')?.textContent ?? '',
         feedId: feed.id,
       }))
 
-      const newPosts = postsWithFeedId.filter(
-        post => !state.incomingWeb.some(existingPost => existingPost.post === post.post),
-      )
+      const newPosts = fetchedPosts.filter(fp => !state.incomingWeb.some(ep => ep.post === fp.post))
 
-      state.incomingWeb.unshift(...newPosts)
+      if (newPosts.length > 0) {
+        state.incomingWeb.unshift(...newPosts.map(p => ({ ...p, id: Math.random().toString(36).substring(2) })))
+      }
     }
     catch (e) {
       console.error('Ошибка при обновлении фида:', e)
@@ -24,6 +28,7 @@ export const updateFeeds = async (state) => {
   })
 
   await Promise.all(promises)
-
-  setTimeout(() => updateFeeds(state), 5000)
+  setTimeout(updateFeeds, 5000)
 }
+
+export { updateFeeds }

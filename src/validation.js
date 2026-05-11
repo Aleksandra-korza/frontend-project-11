@@ -10,13 +10,4 @@ yup.setLocale({
   },
 })
 
-export const validateUrl = (url, feeds) => {
-  const links = feeds.map(feed => feed.link)
-
-  return yup
-    .string()
-    .required()
-    .url()
-    .notOneOf(links)
-    .validate(url)
-}
+export default yup
